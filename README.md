@@ -16,9 +16,6 @@ Cyberduck, s3cmd, aws cli. to name a few
 ###IAM User
 Amazon Identity and Access Management (IAM) is used to authenticate access to the various services. You'll find it listed in the [AWS console](https://console.aws.amazon.com/console/home)
 
-
-
-
 ###Installing
 Since these headers are created for each request we need to (at this time) mess with munki to get it to work.  
 I don't really like it but its the only way to get it to work.  
@@ -53,10 +50,12 @@ def getResourceIfChangedAtomically(
 
 ```
 ######Step 3:  
-Add your IAM access creds to the managed installs preference file
+Add your IAM access creds to the managed installs preference file.  
+As well as the region for your bucket.  
 ```!#bash
 sudo defaults write /Library/Preferences/ManagedInstalls s3AccessKey 'AKIAIX2QPWZ7EXAMPLE'
-sudo defaults write /Library/Preferences/ManagedInstalls s3AccessKey 'z5MFJCcEyYBmh2BxbrlZBWNJ4izEXAMPLE'
+sudo defaults write /Library/Preferences/ManagedInstalls s3SecretKey 'z5MFJCcEyYBmh2BxbrlZBWNJ4izEXAMPLE'
+sudo defaults write /Library/Preferences/ManagedInstalls s3Region 'us-west-2'
 ```
 ######Step 4:
 Change your repo to point to your s3 bucket.  
