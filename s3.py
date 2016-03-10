@@ -15,7 +15,7 @@ from munkicommon import pref
 
 method = 'GET'
 service = 's3'
-region = 'us-west-2'
+#region = 'us-west-2'
 
 def sign(key, msg):
     return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
@@ -33,6 +33,7 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
 # access_key = os.getenv('S3_ACCESS_KEY')
 access_key = pref('s3AccessKey')
 secret_key = pref('s3SecretKey')
+region = pref('s3Region')
 
 if access_key is None or secret_key is None:
     print 'No access key is available.'
