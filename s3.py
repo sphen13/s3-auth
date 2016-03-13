@@ -1,5 +1,6 @@
+#!/usr/bin/python
 """
-Generate s3 authentication headers for your protected files
+Generate AWS4 authentication headers for your protected files
 
 This module is meant to plug into munki.
 https://github.com/munki/munki/wiki
@@ -10,12 +11,22 @@ http://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html#
 """
 import sys, os, datetime, hashlib, hmac 
 from urlparse import urlparse
+import optparse
 
-from munkicommon import pref
+from Foundation import CFPreferencesAppSynchronize
+from Foundation import CFPreferencesSetValue
+from Foundation import CFPreferencesCopyAppValue
+from Foundation import kCFPreferencesAnyUser
+from Foundation import kCFPreferencesCurrentHost
+
+BUNDLE_ID = 'com.github.wrobson.s3-auth'
 
 method = 'GET'
-service = 's3'
-#region = 'us-west-2'
+
+parser = optparse.OptionParser()
+parser.add_option('--configure', help="Interative setup", action="store_true")
+options, remainder = parser.parse_args()
+
 
 def sign(key, msg):
     return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
@@ -27,17 +38,59 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
     kSigning = sign(kService, 'aws4_request')
     return kSigning
 
-# Read AWS access key from env. variables or configuration file. Best practice is NOT
-# to embed credentials in code.
-# secret_key = os.getenv('S3_SECRET_KEY')
-# access_key = os.getenv('S3_ACCESS_KEY')
-access_key = pref('s3AccessKey')
-secret_key = pref('s3SecretKey')
-region = pref('s3Region')
 
-if access_key is None or secret_key is None:
-    print 'No access key is available.'
+def set_pref(pref_name, pref_value):
+    """Sets a preference, See munkicommon.py for details"""
+    CFPreferencesSetValue(
+        pref_name, pref_value, BUNDLE_ID,
+        kCFPreferencesAnyUser, kCFPreferencesCurrentHost)
+    CFPreferencesAppSynchronize(BUNDLE_ID)
+    try:
+        CFPreferencesSetValue(
+            pref_name, pref_value, BUNDLE_ID,
+            kCFPreferencesAnyUser, kCFPreferencesCurrentHost)
+        CFPreferencesAppSynchronize(BUNDLE_ID)
+    except Exception:
+        pass
+
+
+def pref(pref_name):
+    """Return a preference. See munkicommon.py for details
+    """
+    pref_value = CFPreferencesCopyAppValue(pref_name, BUNDLE_ID)
+    return pref_value
+
+def raw_input_with_default(prompt='', default=''):
+    '''Get input from user with a prompt and a suggested default value'''
+
+    if default:
+        prompt = '%s [%s]: ' % (prompt, default)
+        return raw_input(prompt).decode('UTF-8') or default.decode('UTF-8')
+    else:
+        # no default value, just call raw_input
+        return raw_input(prompt + ": ").decode('UTF-8')
+
+
+def configure():
+    """Configures munkiimport for use"""
+    for (key, prompt) in [
+            ('AccessKey', 'Access Key  eg: "AKIAIX2QPWZ7EXAMPLE"'),
+            ('SecretKey',
+             'Secret Key  eg: "z5MFJCcEyYBmh2BxbrlZBWNJ4izEXAMPLE"'),
+            ('Region', 'AWS Region code eg: "us-west-2"'),
+            ('Service','AWS service eg: s3 or cloudfront')]:
+
+        value = raw_input_with_default('%15s' % prompt, pref(key))
+        set_pref(key,value)
     sys.exit()
+
+
+
+access_key = pref('AccessKey')
+secret_key = pref('SecretKey')
+region = pref('Region')
+service = pref('Service')
+
 
 # Create a date for headers and the credential string
 t = datetime.datetime.utcnow()
@@ -100,5 +153,19 @@ def s3_auth_headers(url):
                'Authorization:' + authorization_header]
     return headers
 
+def main():
+    if options.configure:
+        configure()
+    if access_key is None or secret_key is None:
+        print 'Config is missing. Please run "s3.py --configure"'
+        sys.exit()
+    try:
+        headers = s3_auth_headers(sys.argv[1])
+    except IndexError:
+        raise BaseException('''Please provide a URL ie; s3.py "http://s3.bucket.com/files"''')
+    for header in headers:
+        print header
 
+if __name__ == '__main__':
+    sys.exit(main())
 
