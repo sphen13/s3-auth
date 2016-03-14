@@ -6,7 +6,7 @@ What you need:
 * An AWS account
 * A s3 bucket
 * IAM user with limited policy (optional)
-* [munki](https://github.com/munki/munki)
+* My forked version of [updatecheck.py](https://github.com/waderobson/munki/blob/header-from-executable/code/client/munkilib/updatecheck.py)
 
 
 ###Bucket
@@ -39,4 +39,9 @@ sudo /usr/local/sbin/s3.py --configure
 Change your repo to point to your s3 bucket.  
 ```!#bash
 sudo defaults write /Library/Preferences/ManagedInstalls SoftwareRepoURL  "https://S3_BUCKET_GOES_HERE.s3.amazonaws.com"
+```
+######Step 5:
+Replace `updatecheck.py` with forked version.  
+```!#bash
+sudo curl https://raw.githubusercontent.com/waderobson/munki/header-from-executable/code/client/munkilib/updatecheck.py -o /usr/local/munki/munkilib/updatecheck.py
 ```
