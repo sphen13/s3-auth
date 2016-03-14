@@ -22,6 +22,7 @@ from Foundation import kCFPreferencesCurrentHost
 BUNDLE_ID = 'com.github.wrobson.s3-auth'
 
 method = 'GET'
+service = 's3'
 
 parser = optparse.OptionParser()
 parser.add_option('--configure', help="Interative setup", action="store_true")
@@ -60,16 +61,6 @@ def pref(pref_name):
     pref_value = CFPreferencesCopyAppValue(pref_name, BUNDLE_ID)
     return pref_value
 
-def raw_input_with_default(prompt='', default=''):
-    '''Get input from user with a prompt and a suggested default value'''
-
-    if default:
-        prompt = '%s [%s]: ' % (prompt, default)
-        return raw_input(prompt).decode('UTF-8') or default.decode('UTF-8')
-    else:
-        # no default value, just call raw_input
-        return raw_input(prompt + ": ").decode('UTF-8')
-
 
 def configure():
     """Configures munkiimport for use"""
@@ -77,19 +68,16 @@ def configure():
             ('AccessKey', 'Access Key  eg: "AKIAIX2QPWZ7EXAMPLE"'),
             ('SecretKey',
              'Secret Key  eg: "z5MFJCcEyYBmh2BxbrlZBWNJ4izEXAMPLE"'),
-            ('Region', 'AWS Region code eg: "us-west-2"'),
-            ('Service','AWS service eg: s3 or cloudfront')]:
+            ('Region', 'AWS Region code eg: "us-west-2"')]:
 
-        value = raw_input_with_default('%15s' % prompt, pref(key))
+        value = raw_input('%15s' % prompt+ ": ").decode('UTF-8')
         set_pref(key,value)
     sys.exit()
-
 
 
 access_key = pref('AccessKey')
 secret_key = pref('SecretKey')
 region = pref('Region')
-service = pref('Service')
 
 
 # Create a date for headers and the credential string
@@ -153,6 +141,7 @@ def s3_auth_headers(url):
                'Authorization:' + authorization_header]
     return headers
 
+
 def main():
     if options.configure:
         configure()
@@ -162,10 +151,10 @@ def main():
     try:
         headers = s3_auth_headers(sys.argv[1])
     except IndexError:
-        raise BaseException('''Please provide a URL ie; s3.py "http://s3.bucket.com/files"''')
+        print '''Please provide a URL ie; s3.py "http://s3.bucket.com/files"'''
+        sys.exit(1)
     for header in headers:
         print header
 
 if __name__ == '__main__':
     sys.exit(main())
-
