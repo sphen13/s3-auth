@@ -13,11 +13,13 @@ import sys, os, datetime, hashlib, hmac
 from urlparse import urlparse
 import optparse
 
+# pylint: disable=E0611
 from Foundation import CFPreferencesAppSynchronize
 from Foundation import CFPreferencesSetValue
 from Foundation import CFPreferencesCopyAppValue
 from Foundation import kCFPreferencesAnyUser
 from Foundation import kCFPreferencesCurrentHost
+# pylint: enable=E0611
 
 BUNDLE_ID = 'com.github.wrobson.s3-auth'
 
@@ -148,13 +150,18 @@ def main():
     if access_key is None or secret_key is None:
         print 'Config is missing. Please run "s3.py --configure"'
         sys.exit()
-    try:
-        headers = s3_auth_headers(sys.argv[1])
-    except IndexError:
-        print '''Please provide a URL ie; s3.py "http://s3.bucket.com/files"'''
-        sys.exit(1)
-    for header in headers:
-        print header
+    if sys.argv[2] == 'headers':
+        try:
+            output = s3_auth_headers(sys.argv[1])
+        except IndexError:
+            print '''Please provide a URL ie; s3.py "http://s3.bucket.com/files"'''
+            sys.exit(1)
+        for line in output:
+            print line
+
+    if sys.argv[2] == 'query_parameters':
+        output = ''
+        print output
 
 if __name__ == '__main__':
     sys.exit(main())
