@@ -9,9 +9,18 @@ This is just a modified version of this
 http://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html#sig-v4-examples-get-auth-header
 
 """
-import sys, os, datetime, hashlib, hmac 
+import sys
+import os
+import datetime
+import hashlib
+import hmac 
 from urlparse import urlparse
 import optparse
+try:
+    import munkilib.munkicommon as munkicommon
+except:
+    pass
+
 
 # pylint: disable=E0611
 from Foundation import CFPreferencesAppSynchronize
@@ -25,10 +34,6 @@ BUNDLE_ID = 'com.github.wrobson.s3-auth'
 
 method = 'GET'
 service = 's3'
-
-parser = optparse.OptionParser()
-parser.add_option('--configure', help="Interative setup", action="store_true")
-options, remainder = parser.parse_args()
 
 
 def sign(key, msg):
@@ -62,19 +67,6 @@ def pref(pref_name):
     """
     pref_value = CFPreferencesCopyAppValue(pref_name, BUNDLE_ID)
     return pref_value
-
-
-def configure():
-    """Configures munkiimport for use"""
-    for (key, prompt) in [
-            ('AccessKey', 'Access Key  eg: "AKIAIX2QPWZ7EXAMPLE"'),
-            ('SecretKey',
-             'Secret Key  eg: "z5MFJCcEyYBmh2BxbrlZBWNJ4izEXAMPLE"'),
-            ('Region', 'AWS Region code eg: "us-west-2"')]:
-
-        value = raw_input('%15s' % prompt+ ": ").decode('UTF-8')
-        set_pref(key,value)
-    sys.exit()
 
 
 access_key = pref('AccessKey')
@@ -137,31 +129,16 @@ def s3_auth_headers(url):
                                                               signed_headers=signed_headers,
                                                               signature=signature)
 
-
-    headers = ['x-amz-date:' + amzdate,
-               'x-amz-content-sha256:' + payload_hash,
-               'Authorization:' + authorization_header]
+    headers = {'x-amz-date': amzdate,
+               'x-amz-content-sha256': payload_hash,
+               'Authorization': authorization_header}
     return headers
 
 
-def main():
-    if options.configure:
-        configure()
-    if access_key is None or secret_key is None:
-        print 'Config is missing. Please run "s3.py --configure"'
-        sys.exit()
-    if sys.argv[2] == 'headers':
-        try:
-            output = s3_auth_headers(sys.argv[1])
-        except IndexError:
-            print '''Please provide a URL ie; s3.py "http://s3.bucket.com/files"'''
-            sys.exit(1)
-        for line in output:
-            print line
-
-    if sys.argv[2] == 'query_parameters':
-        output = ''
-        print output
-
-if __name__ == '__main__':
-    sys.exit(main())
+# This is the fuction that munki calls. 
+def process_request_options(options):
+    """Make changes to options dict and return it."""
+    munkicommon.display_debug2('Middleware: ' + os.path.realpath(__file__))
+    headers = s3_auth_headers(options['url'])
+    options['additional_headers'].update(headers)
+    return options
