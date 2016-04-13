@@ -16,11 +16,6 @@ import hashlib
 import hmac 
 from urlparse import urlparse
 import optparse
-try:
-    import munkilib.munkicommon as munkicommon
-except:
-    pass
-
 
 # pylint: disable=E0611
 from Foundation import CFPreferencesAppSynchronize
@@ -30,7 +25,7 @@ from Foundation import kCFPreferencesAnyUser
 from Foundation import kCFPreferencesCurrentHost
 # pylint: enable=E0611
 
-BUNDLE_ID = 'com.github.wrobson.s3-auth'
+BUNDLE_ID = 'com.github.waderobson.s3-auth'
 
 method = 'GET'
 service = 's3'
@@ -138,7 +133,7 @@ def s3_auth_headers(url):
 # This is the fuction that munki calls. 
 def process_request_options(options):
     """Make changes to options dict and return it."""
-    munkicommon.display_debug2('Middleware: ' + os.path.realpath(__file__))
-    headers = s3_auth_headers(options['url'])
-    options['additional_headers'].update(headers)
+    if 's3.amazonaws.com' in options['url']:
+        headers = s3_auth_headers(options['url'])
+        options['additional_headers'].update(headers)
     return options

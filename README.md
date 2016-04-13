@@ -26,9 +26,9 @@ sudo curl https://raw.githubusercontent.com/waderobson/s3-auth/middleware_s3.py 
 ######Step 3:  
 Setup your s3-auth preferences.  
 ```!#bash
-sudo defaults write /Library/Preferences/com.github.wrobson.s3-auth AccessKey 'AKIAIX2QPWZ7EXAMPLE'
-sudo defaults write /Library/Preferences/com.github.wrobson.s3-auth SecretKey 'z5MFJCcEyYBmh2BxbrlZBWNJ4izEXAMPLE'
-sudo defaults write /Library/Preferences/com.github.wrobson.s3-auth Region 'us-west-2'
+sudo defaults write /Library/Preferences/com.github.waderobson.s3-auth AccessKey 'AKIAIX2QPWZ7EXAMPLE'
+sudo defaults write /Library/Preferences/com.github.waderobson.s3-auth SecretKey 'z5MFJCcEyYBmh2BxbrlZBWNJ4izEXAMPLE'
+sudo defaults write /Library/Preferences/com.github.waderobson.s3-auth Region 'us-west-2'
 ```
 ######Step 4:
 Change your repo to point to your s3 bucket.  
