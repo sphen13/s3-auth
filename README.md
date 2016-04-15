@@ -1,4 +1,4 @@
-****This is a work in progress. Better documentation to follow.****
+t****This is a work in progress. Better documentation to follow.****
 
 
 ##Getting Started
@@ -6,7 +6,7 @@ What you need:
 * An AWS account
 * A s3 bucket
 * IAM user with limited policy (optional)
-* Forked version of [fetch.py](https://github.com/waderobson/munki/blob/middleware/code/client/munkilib/fetch.py)
+* Developement build of munki version 2.6.1.2721 or higher to use middleware. You can find that [here](https://munkibuilds.org/)
 
 
 ###Bucket
@@ -34,9 +34,4 @@ sudo defaults write /Library/Preferences/com.github.waderobson.s3-auth Region 'u
 Change your repo to point to your s3 bucket.  
 ```!#bash
 sudo defaults write /Library/Preferences/ManagedInstalls SoftwareRepoURL  "https://S3_BUCKET_GOES_HERE.s3.amazonaws.com"
-```
-######Step 5:
-Replace `fetch.py` with forked version.  
-```!#bash
-sudo curl https://raw.githubusercontent.com/waderobson/munki/middleware/code/client/munkilib/fetch.py -o /usr/local/munki/munkilib/fetch.py
 ```
