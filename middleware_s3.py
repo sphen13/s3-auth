@@ -9,52 +9,19 @@ This is just a modified version of this
 http://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html#sig-v4-examples-get-auth-header
 
 """
-import sys
-import os
 import datetime
 import hashlib
-import hmac 
+import hmac
 from urlparse import urlparse
-import optparse
 
 # pylint: disable=E0611
-from Foundation import CFPreferencesAppSynchronize
-from Foundation import CFPreferencesSetValue
 from Foundation import CFPreferencesCopyAppValue
-from Foundation import kCFPreferencesAnyUser
-from Foundation import kCFPreferencesCurrentHost
 # pylint: enable=E0611
 
 BUNDLE_ID = 'com.github.waderobson.s3-auth'
 
-method = 'GET'
-service = 's3'
-
-
-def sign(key, msg):
-    return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
-
-def getSignatureKey(key, dateStamp, regionName, serviceName):
-    kDate = sign(('AWS4' + key).encode('utf-8'), dateStamp)
-    kRegion = sign(kDate, regionName)
-    kService = sign(kRegion, serviceName)
-    kSigning = sign(kService, 'aws4_request')
-    return kSigning
-
-
-def set_pref(pref_name, pref_value):
-    """Sets a preference, See munkicommon.py for details"""
-    CFPreferencesSetValue(
-        pref_name, pref_value, BUNDLE_ID,
-        kCFPreferencesAnyUser, kCFPreferencesCurrentHost)
-    CFPreferencesAppSynchronize(BUNDLE_ID)
-    try:
-        CFPreferencesSetValue(
-            pref_name, pref_value, BUNDLE_ID,
-            kCFPreferencesAnyUser, kCFPreferencesCurrentHost)
-        CFPreferencesAppSynchronize(BUNDLE_ID)
-    except Exception:
-        pass
+METHOD = 'GET'
+SERVICE = 's3'
 
 
 def pref(pref_name):
@@ -64,65 +31,74 @@ def pref(pref_name):
     return pref_value
 
 
-access_key = pref('AccessKey')
-secret_key = pref('SecretKey')
-region = pref('Region')
+ACCESS_KEY = pref('AccessKey')
+SECRET_KEY = pref('SecretKey')
+REGION = pref('Region')
 
 
-# Create a date for headers and the credential string
-t = datetime.datetime.utcnow()
-amzdate = t.strftime('%Y%m%dT%H%M%SZ')
-datestamp = t.strftime('%Y%m%d') # Date w/o time, used in credential scope
+def sign(key, msg):
+    return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
+
+
+def get_signature_key(key, datestamp, region, service):
+    kdate = sign(('AWS4' + key).encode('utf-8'), datestamp)
+    kregion = sign(kdate, region)
+    kservice = sign(kregion, service)
+    ksigning = sign(kservice, 'aws4_request')
+    return ksigning
+
 
 def uri_from_url(url):
     parse = urlparse(url)
     return parse.path
 
+
 def host_from_url(url):
     parse = urlparse(url)
     return parse.hostname
+
 
 def s3_auth_headers(url):
     """
     Returns a list that contains all the required header information.
     Each header is unique to the url requested.
     """
+    # Create a date for headers and the credential string
+    time_now = datetime.datetime.utcnow()
+    amzdate = time_now.strftime('%Y%m%dT%H%M%SZ')
+    datestamp = time_now.strftime('%Y%m%d') # Date w/o time, used in credential scope
     uri = uri_from_url(url)
     host = host_from_url(url)
-    canonical_uri = '{uri}'.format(uri=uri)
+    canonical_uri = uri
     canonical_querystring = ''
-    canonical_headers = 'host:' + host + '\n' + 'x-amz-date:' + amzdate + '\n'
+    canonical_headers = 'host:{}\nx-amz-date:{}\n'.format(host, amzdate)
     signed_headers = 'host;x-amz-date'
     payload_hash = hashlib.sha256('').hexdigest()
-    canonical_request_string = ("{method}\n{canonical_uri}\n{canonical_querystring}\n"
-                                "{canonical_headers}\n{signed_headers}\n{payload_hash}")
-    canonical_request = canonical_request_string.format(method=method,
-                                                        canonical_uri=canonical_uri,
-                                                        canonical_querystring=canonical_querystring,
-                                                        canonical_headers=canonical_headers,
-                                                        signed_headers=signed_headers,
-                                                        payload_hash=payload_hash)
+    canonical_request = '{}\n{}\n{}\n{}\n{}\n{}'.format(METHOD,
+                                                        canonical_uri,
+                                                        canonical_querystring,
+                                                        canonical_headers,
+                                                        signed_headers,
+                                                        payload_hash)
 
     algorithm = 'AWS4-HMAC-SHA256'
-    credential_scope = datestamp + '/' + region + '/' + service + '/' + 'aws4_request'
-    string_to_sign_string = "{algorithm}\n{amzdate}\n{credential_scope}\n{hashed_request}"
+    credential_scope = '{}/{}/{}/aws4_request'.format(datestamp, REGION, SERVICE)
     hashed_request = hashlib.sha256(canonical_request).hexdigest()
-    string_to_sign = string_to_sign_string.format(algorithm=algorithm,
-                                                  amzdate=amzdate,
-                                                  credential_scope=credential_scope,
-                                                  hashed_request=hashed_request)
+    string_to_sign = '{}\n{}\n{}\n{}'.format(algorithm,
+                                             amzdate,
+                                             credential_scope,
+                                             hashed_request)
 
 
-    signing_key = getSignatureKey(secret_key, datestamp, region, service)
+    signing_key = get_signature_key(SECRET_KEY, datestamp, REGION, SERVICE)
     signature = hmac.new(signing_key, (string_to_sign).encode('utf-8'), hashlib.sha256).hexdigest()
 
-    authorization_header_string = ("{algorithm} Credential={access_key}/{credential_scope},"
-                                   " SignedHeaders={signed_headers}, Signature={signature}")
-    authorization_header = authorization_header_string.format(algorithm=algorithm,
-                                                              access_key=access_key,
-                                                              credential_scope=credential_scope,
-                                                              signed_headers=signed_headers,
-                                                              signature=signature)
+    authorization_header = ("{} Credential={}/{},"
+                            " SignedHeaders={}, Signature={}").format(algorithm,
+                                                                      ACCESS_KEY,
+                                                                      credential_scope,
+                                                                      signed_headers,
+                                                                      signature)
 
     headers = {'x-amz-date': amzdate,
                'x-amz-content-sha256': payload_hash,
@@ -130,9 +106,9 @@ def s3_auth_headers(url):
     return headers
 
 
-# This is the fuction that munki calls. 
 def process_request_options(options):
-    """Make changes to options dict and return it."""
+    """Make changes to options dict and return it.
+       This is the fuction that munki calls."""
     if 's3.amazonaws.com' in options['url']:
         headers = s3_auth_headers(options['url'])
         options['additional_headers'].update(headers)
