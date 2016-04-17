@@ -60,7 +60,7 @@ def host_from_url(url):
 
 def s3_auth_headers(url):
     """
-    Returns a list that contains all the required header information.
+    Returns a dict that contains all the required header information.
     Each header is unique to the url requested.
     """
     # Create a date for headers and the credential string
