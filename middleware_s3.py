@@ -19,7 +19,7 @@ from Foundation import CFPreferencesCopyAppValue
 # pylint: enable=E0611
 
 BUNDLE_ID = 'com.github.waderobson.s3-auth'
-
+__version__ = '1.0'
 METHOD = 'GET'
 SERVICE = 's3'
 
