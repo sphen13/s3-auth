@@ -34,6 +34,7 @@ def pref(pref_name):
 ACCESS_KEY = pref('AccessKey')
 SECRET_KEY = pref('SecretKey')
 REGION = pref('Region')
+S3_ENDPOINT = pref('S3Endpoint') or 's3.amazonaws.com'
 
 
 def sign(key, msg):
@@ -109,7 +110,7 @@ def s3_auth_headers(url):
 def process_request_options(options):
     """Make changes to options dict and return it.
        This is the fuction that munki calls."""
-    if 's3.amazonaws.com' in options['url']:
+    if S3_ENDPOINT in options['url']:
         headers = s3_auth_headers(options['url'])
         options['additional_headers'].update(headers)
     return options
