@@ -19,7 +19,7 @@ from Foundation import CFPreferencesCopyAppValue
 # pylint: enable=E0611
 
 BUNDLE_ID = 'ManagedInstalls'
-__version__ = '1.0'
+__version__ = '1.2'
 METHOD = 'GET'
 SERVICE = 's3'
 
