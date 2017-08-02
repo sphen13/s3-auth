@@ -1,0 +1,11 @@
+os: osx
+osx_image: xcode6.4
+script: sh build.sh
+deploy:
+  provider: releases
+  api_key:
+    secure: daVz5NL3W8ckKELVrADExRcvN/1NVY9xWQW4TMxf6O8CByD+SaGjBGbuuZa7oRvNWKisgSu7K2lR8iIz5vKqiq2nz9b8Ca3gDPODKJd+BvvrIW0Rlrb6P+NhW16yk3sXf2s91EpKxj3RJ7NuLBFmuFlIvTJIxUQ8kbDKMI1+nrihxZGWnBTMEFE/9cA6qHu3kbJIURGldPkgo6XZh7iwQW2FlAVEw+EyY+1UwDzbAfgQySEOPYUebjphleb0Hjtb5ZA/0FWnWMIGYmw6oDOOpz18hkSeCYnN0Pgh0SMFvtVIP4CuFul76b2COjVzBc7o6t6DiosjNsOGx5Lt84lbxMrvKtiGkaDAVAeVE7yLw3H3awNJ6ALWYEjpWI7CL9XFhdxHRzaQ7mqcP0EjPU6u22tHCWib7GYGwRQtpIsA1ejMgthVVMCpsxfSpHZV/KJjF9fmIjPUZJgtYbq/l1w8MzB5+98bTqRpYvq/SMhHggjKaTKlyoASm+HlcImsGO+zGEZKPA/Xj1HS09kb7xBORWXiEIAQKwHtk34Z9gOBfWjOzQdK2Wy46iHyHV3m1L66xOeiQZHd2gtcMsVBJ4wwLy6+En77CfbhuQEs7/Pxupcc3BrO8VzH3PW5YcYqoELfmKQmrJhKNK4bYFB8oZ/944QqfhRlzAuh1juhCIiPLHQ=
+  skip_cleanup: true
+  on:
+    tags: true
+  file: build/com.github.s3-auth.pkg
