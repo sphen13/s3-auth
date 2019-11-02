@@ -71,7 +71,7 @@ def s3_auth_headers(url):
     # Create a date for headers and the credential string
     time_now = datetime.datetime.utcnow()
     amzdate = time_now.strftime('%Y%m%dT%H%M%SZ')
-    datestamp = time_now.strftime('%Y%m%d') # Date w/o time, used in credential scope
+    datestamp = time_now.strftime('%Y%m%d')  # Date w/o time, used in credential scope
     uri = uri_from_url(url)
     host = host_from_url(url)
     canonical_uri = uri
@@ -93,7 +93,6 @@ def s3_auth_headers(url):
                                              amzdate,
                                              credential_scope,
                                              hashed_request)
-
 
     signing_key = get_signature_key(SECRET_KEY, datestamp, REGION, SERVICE)
     signature = hmac.new(signing_key, (string_to_sign).encode('utf-8'), hashlib.sha256).hexdigest()
