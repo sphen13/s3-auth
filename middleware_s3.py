@@ -14,7 +14,7 @@ import hashlib
 import hmac
 # backwards compatibility for python2
 try:
-    from urllib2 import urlparse
+    from urlparse import urlparse
 except ImportError:
     from urllib.parse import urlparse
 
