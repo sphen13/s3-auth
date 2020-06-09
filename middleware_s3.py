@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/munki/python
 """
 Generate AWS4 authentication headers for your protected files
 
